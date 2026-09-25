@@ -1,4 +1,5 @@
-import { CircleAlert } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CircleAlert } from "lucide-react";
 import { emergencyNotice } from "@/content/site";
 import { Container } from "@/components/ui/Container";
 
@@ -26,6 +27,15 @@ export function EmergencyNotice() {
                 </a>
               </strong>{" "}
               to reach the Suicide &amp; Crisis Lifeline.
+            </p>
+            <p>
+              <Link
+                href="/crisis-resources"
+                className="inline-flex min-h-10 items-center gap-1.5 text-[0.975rem] font-medium text-terracotta-800 underline decoration-terracotta-300 underline-offset-4 hover:decoration-terracotta-700"
+              >
+                More crisis and mental health resources
+                <ArrowRight aria-hidden="true" className="h-4 w-4" />
+              </Link>
             </p>
             <p className="text-sm leading-relaxed text-ink-600">{emergencyNotice.disclaimer}</p>
           </div>

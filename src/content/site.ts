@@ -85,6 +85,7 @@ export const footerNav: NavItem[] = [
   { label: "Bilingual Counseling", href: "/bilingual-counseling" },
   { label: "Evaluations", href: "/evaluations" },
   { label: "FAQ", href: "/faq" },
+  { label: "Crisis Resources", href: "/crisis-resources" },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -359,6 +360,85 @@ export const emergencyNotice = {
   disclaimer:
     "Information provided on this website is for general informational purposes and is not a substitute for individualized mental health care, medical advice, diagnosis, or emergency services.",
 };
+
+export type CrisisContact = {
+  kind: "call" | "text";
+  /** Button label, e.g. "Call 988" or "Text HOME to 741741". */
+  label: string;
+  href: string;
+};
+
+export type CrisisResource = {
+  name: string;
+  description: string;
+  contacts: CrisisContact[];
+  /** Short extra line, e.g. Spanish-language access. */
+  note?: string;
+};
+
+// `sms:NUMBER?&body=WORD` pre-fills the keyword on both iPhone and Android.
+export const crisisResources: CrisisResource[] = [
+  {
+    name: "988 Suicide & Crisis Lifeline",
+    description:
+      "Available 24/7 for suicidal thoughts, self-harm, emotional distress, and mental health crises.",
+    contacts: [
+      { kind: "call", label: "Call 988", href: "tel:988" },
+      { kind: "text", label: "Text 988", href: "sms:988" },
+    ],
+    note: "En español: llame al 988 y presione 2.",
+  },
+  {
+    name: "Tropical Texas Behavioral Health (TTBH) Crisis Line",
+    description: "24/7 crisis support serving Hidalgo, Cameron, and Willacy counties.",
+    contacts: [{ kind: "call", label: "Call 1-877-289-7199", href: "tel:+18772897199" }],
+  },
+  {
+    name: "Crisis Text Line",
+    description: "Free, confidential crisis support available 24/7.",
+    contacts: [{ kind: "text", label: "Text HOME to 741741", href: "sms:741741?&body=HOME" }],
+  },
+  {
+    name: "Texas 2-1-1",
+    description:
+      "Connects individuals and families with local mental health, housing, food, healthcare, and community resources.",
+    contacts: [{ kind: "call", label: "Dial 211", href: "tel:211" }],
+  },
+  {
+    name: "Veterans Crisis Line",
+    description:
+      "24/7 confidential crisis support for veterans, service members, and their loved ones.",
+    contacts: [
+      { kind: "call", label: "Call 988, then press 1", href: "tel:988" },
+      { kind: "text", label: "Text 838255", href: "sms:838255" },
+    ],
+  },
+  {
+    name: "The Trevor Project — LGBTQ+ Youth & Young Adults",
+    description: "Crisis support for LGBTQ+ young people.",
+    contacts: [
+      { kind: "call", label: "Call 1-866-488-7386", href: "tel:+18664887386" },
+      { kind: "text", label: "Text START to 678678", href: "sms:678678?&body=START" },
+    ],
+  },
+  {
+    name: "Childhelp National Child Abuse Hotline",
+    description: "Call, text, or chat for support related to child abuse, neglect, or safety concerns.",
+    contacts: [
+      { kind: "call", label: "Call 1-800-422-4453", href: "tel:+18004224453" },
+      { kind: "text", label: "Text 1-800-422-4453", href: "sms:+18004224453" },
+    ],
+  },
+  {
+    name: "National Domestic Violence Hotline",
+    description:
+      "Confidential support for individuals experiencing domestic or intimate partner violence.",
+    contacts: [
+      { kind: "call", label: "Call 1-800-799-7233", href: "tel:+18007997233" },
+      { kind: "text", label: "Text START to 88788", href: "sms:88788?&body=START" },
+    ],
+  },
+];
 
 /** Options for the appointment inquiry form. Keep values stable — they are sent with submissions. */
 export const formOptions = {
