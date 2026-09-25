@@ -16,6 +16,30 @@ export type Photo = {
   position?: string;
 };
 
+const DEFAULT_SITE_URL = "https://www.sunsetcounselingcenter.com";
+
+/**
+ * Resolves the public site URL. Tolerates empty values and bare domains
+ * (e.g. "example.com"), and falls back to Vercel's production domain.
+ */
+function resolveSiteUrl(): string {
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  ];
+  for (const raw of candidates) {
+    const value = raw?.trim();
+    if (!value) continue;
+    const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+    try {
+      return new URL(withProtocol).origin;
+    } catch {
+      console.warn(`Ignoring invalid site URL: "${value}"`);
+    }
+  }
+  return DEFAULT_SITE_URL;
+}
+
 export const site = {
   name: "Sunset Counseling Center, PLLC",
   shortName: "Sunset Counseling Center",
@@ -23,7 +47,7 @@ export const site = {
   description:
     "Compassionate individual counseling in McAllen, Texas. Sunset Counseling Center, PLLC offers bilingual counseling in English and Spanish with in-person and telehealth options.",
   // Set NEXT_PUBLIC_SITE_URL in production to the live domain.
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sunsetcounselingcenter.com",
+  url: resolveSiteUrl(),
   serviceArea: "Serving the Rio Grande Valley & Surrounding Areas",
   languages: ["English", "Spanish"],
   phone: {
