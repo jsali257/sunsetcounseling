@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sunset Counseling Center, PLLC — Website
 
-## Getting Started
+Marketing site for a counseling practice in McAllen, Texas. Built with Next.js (App Router), TypeScript, and Tailwind CSS v4. Every page is prerendered as static HTML.
 
-First, run the development server:
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # then fill in values
+npm run dev                  # http://localhost:3000
+npm run build && npm start   # production build
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Editing content
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Nearly all copy lives in **`src/content/site.ts`**: contact details, navigation, services, FAQ, bilingual copy, evaluation and referral text, insurance text, and form options. Change it there. Components only handle presentation.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To add Diana's portrait, put the image in `public/images/` and set `counselor.portrait` in `site.ts`:
 
-## Learn More
+```ts
+portrait: { src: "/images/diana-arredondo.jpg", alt: "Diana Arredondo, M.S., LPC" },
+```
 
-To learn more about Next.js, take a look at the following resources:
+It renders through `next/image`. Until then, the site shows a neutral monogram placeholder.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+  app/                    Routes, metadata, sitemap, robots, OG image, icon
+    actions/appointment.ts  Server action for the inquiry form
+  components/
+    layout/               Navbar, MobileNavigation, MobileCTABar, EmergencyNotice, Footer, Logo
+    sections/             Hero, Introduction, CounselorProfile, Services (ServiceCard),
+                          BilingualSection, SessionFormats (LocationCard, TelehealthCard),
+                          EvaluationSection, ProfessionalReferralSection, InsuranceSection,
+                          FAQAccordion, AppointmentCTA, PageHeader, LegalPage
+    forms/ContactForm.tsx Appointment inquiry form
+    ui/                   Button, Container, SectionHeading, Reveal, decorative SVGs
+  content/site.ts         All site copy and settings
+  lib/                    Validation, delivery, metadata and structured-data helpers
+```
 
-## Deploy on Vercel
+Design tokens (colors, fonts, shadows, and the `nav` breakpoint) are defined in `src/app/globals.css` under `@theme`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Appointment form
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The form validates on the server and delivers the inquiry through one of these, configured in `.env.local` or your host's environment settings:
+
+- **Resend email:** `RESEND_API_KEY` + `CONTACT_TO_EMAIL` (+ `CONTACT_FROM_EMAIL` from a verified domain)
+- **Webhook:** `CONTACT_WEBHOOK_URL` (JSON POST to a form service or CRM)
+
+With neither configured, inquiries are logged to the console in development. In production, visitors see a message asking them to call. The form includes a honeypot field for spam, a privacy notice, and a required acknowledgement that it is not for emergencies or sensitive clinical details.
+
+> **Compliance:** the site does not claim to be HIPAA-compliant. Before going live, the practice should choose its hosting and form-delivery providers deliberately. That includes confirming whether a Business Associate Agreement is needed and whether the provider will sign one. Don't add compliance claims to the site unless the deployed systems and agreements support them.
+
+## Before launch: checklist for the practice
+
+- [ ] Set `NEXT_PUBLIC_SITE_URL` to the real domain. The default, `www.sunsetcounselingcenter.com`, is a placeholder.
+- [ ] Configure form delivery (see above) and send a test inquiry.
+- [ ] Have the practice's compliance or legal advisor review `/privacy`, `/notice-of-privacy-practices`, and `/informed-consent`. These pages are general overviews that point to the official documents given at intake.
+- [ ] Add Diana's professional portrait.
+- [ ] Optionally add confirmed office hours, accepted insurance plans, or map coordinates to `src/content/site.ts` and to the structured data in `src/lib/structured-data.tsx`. These were left out on purpose because they haven't been verified.
+- [ ] If analytics are added, update the Privacy Policy's "Cookies and analytics" section.
+
+## Accessibility and performance
+
+- Semantic landmarks, a skip link, one `h1` per page, and a logical heading order
+- Visible focus states and keyboard-operable navigation. The mobile drawer uses native `<dialog>` for focus containment and Escape to close.
+- The FAQ uses native `<details>`/`<summary>`, so it works without JavaScript
+- Form fields have labels, `aria-invalid`/`aria-describedby` error wiring, and focus moves to the result
+- Text colors meet WCAG AA contrast on their backgrounds
+- Scroll reveals are subtle, respect `prefers-reduced-motion`, and content stays visible without JavaScript and when printing
+- Hero and decorative art are inline SVG (no image requests). Fonts are self-hosted through `next/font`.

@@ -1,0 +1,346 @@
+/**
+ * Central content for Sunset Counseling Center, PLLC.
+ *
+ * Copy, contact details, and navigation live here so they can be updated
+ * without touching presentation components.
+ */
+
+export const site = {
+  name: "Sunset Counseling Center, PLLC",
+  shortName: "Sunset Counseling Center",
+  tagline: "Compassionate Care for a Brighter Tomorrow",
+  description:
+    "Compassionate individual counseling in McAllen, Texas. Sunset Counseling Center, PLLC offers bilingual counseling in English and Spanish with in-person and telehealth options.",
+  // Set NEXT_PUBLIC_SITE_URL in production to the live domain.
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sunsetcounselingcenter.com",
+  serviceArea: "Serving the Rio Grande Valley & Surrounding Areas",
+  languages: ["English", "Spanish"],
+  phone: {
+    display: "956-601-8486",
+    href: "tel:+19566018486",
+    e164: "+1-956-601-8486",
+  },
+  address: {
+    street: "5517 N McColl Rd.",
+    city: "McAllen",
+    state: "TX",
+    zip: "78504",
+    mapsUrl:
+      "https://www.google.com/maps/dir/?api=1&destination=5517+N+McColl+Rd,+McAllen,+TX+78504",
+  },
+  year: 2026,
+} as const;
+
+export type NavItem = { label: string; href: string };
+
+export const mainNav: NavItem[] = [
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "Services", href: "/services" },
+  { label: "Bilingual Counseling", href: "/bilingual-counseling" },
+  { label: "Evaluations", href: "/evaluations" },
+  { label: "For Professionals", href: "/professional-referrals" },
+  { label: "FAQ", href: "/faq" },
+  { label: "Contact", href: "/contact" },
+];
+
+export const footerNav: NavItem[] = [
+  { label: "About", href: "/about" },
+  { label: "Services", href: "/services" },
+  { label: "Bilingual Counseling", href: "/bilingual-counseling" },
+  { label: "Evaluations", href: "/evaluations" },
+  { label: "FAQ", href: "/faq" },
+  { label: "Contact", href: "/contact" },
+];
+
+export const legalNav: NavItem[] = [
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Notice of Privacy Practices", href: "/notice-of-privacy-practices" },
+  { label: "Informed Consent", href: "/informed-consent" },
+  { label: "Contact", href: "/contact" },
+];
+
+/** Links used by calls-to-action throughout the site. */
+export const ctaLinks = {
+  appointment: "/contact#request-appointment",
+  telehealth: "/contact?reason=telehealth#request-appointment",
+  evaluation: "/contact?reason=evaluation#request-appointment",
+  referral: "/contact?reason=referral#request-appointment",
+  insurance: "/contact?reason=insurance#request-appointment",
+} as const;
+
+export const hero = {
+  /** Rendered as one heading; the accent portion is set in italic. */
+  headline: "Compassionate Care for a",
+  headlineAccent: "Brighter Tomorrow",
+  subhead: "A safe, supportive space to feel heard, understood, and empowered.",
+  serviceLine: ["Individual Counseling", "Bilingual Services", "In-Person & Telehealth"],
+  trust: {
+    status: "Now Accepting New Clients",
+    area: "Serving the Rio Grande Valley & Surrounding Areas",
+  },
+};
+
+export const introduction = {
+  heading: "A Safe Space for Healing and Growth",
+  paragraphs: [
+    "At Sunset Counseling Center, PLLC, we believe everyone deserves a safe, supportive space to feel heard, understood, and empowered.",
+    "Life can bring difficult seasons, unexpected changes, overwhelming emotions, and experiences that can be difficult to navigate alone. Counseling provides an opportunity to slow down, understand what you are experiencing, develop healthier coping strategies, and work toward meaningful change.",
+    "Our goal is to provide compassionate, culturally responsive, and individualized mental health services while meeting each client where they are.",
+  ],
+};
+
+export const counselor = {
+  name: "Diana Arredondo",
+  credentials: "M.S., LPC",
+  title: "Licensed Professional Counselor",
+  /**
+   * Add a real portrait by placing an image in /public (e.g. /images/diana-arredondo.jpg)
+   * and setting the path here. Leave as null to show the placeholder.
+   */
+  portrait: null as { src: string; alt: string } | null,
+  bio: [
+    "Diana Arredondo is a Licensed Professional Counselor providing counseling services to individuals seeking support through challenging life experiences.",
+    "Her counseling style emphasizes compassion, emotional safety, collaboration, and respect. She believes that clients are more than the challenges they are experiencing and works to help individuals recognize their strengths while developing practical tools for managing difficult thoughts, emotions, and circumstances.",
+    "Her clinical approach may incorporate evidence-informed techniques from Cognitive Behavioral Therapy (CBT), motivational interviewing, mindfulness, grounding, emotional regulation, and trauma-informed care based on each client’s individual needs.",
+    "Diana provides services in both English and Spanish.",
+  ],
+  highlights: [
+    "Licensed Professional Counselor",
+    "English & Spanish",
+    "In-Person & Telehealth",
+    "Individualized Care",
+  ],
+  approaches: [
+    "Cognitive Behavioral Therapy (CBT)",
+    "Motivational interviewing",
+    "Mindfulness",
+    "Grounding",
+    "Emotional regulation",
+    "Trauma-informed care",
+  ],
+};
+
+export type ServiceIcon =
+  | "individual"
+  | "anxiety"
+  | "depression"
+  | "trauma"
+  | "transitions"
+  | "growth"
+  | "coping";
+
+export type Service = {
+  slug: string;
+  title: string;
+  icon: ServiceIcon;
+  description: string;
+};
+
+export const services: Service[] = [
+  {
+    slug: "individual-counseling",
+    title: "Individual Counseling",
+    icon: "individual",
+    description:
+      "One-on-one counseling provides a confidential and supportive environment to explore emotional concerns, life experiences, relationships, behaviors, and personal goals.",
+  },
+  {
+    slug: "anxiety-stress",
+    title: "Anxiety & Stress",
+    icon: "anxiety",
+    description:
+      "Counseling can help individuals better understand patterns of worry and stress while developing practical strategies for managing anxious thoughts, emotional overwhelm, and everyday pressures.",
+  },
+  {
+    slug: "depression-emotional-wellness",
+    title: "Depression & Emotional Wellness",
+    icon: "depression",
+    description:
+      "Support for individuals experiencing sadness, low motivation, emotional exhaustion, difficulty enjoying activities, or other concerns affecting emotional well-being.",
+  },
+  {
+    slug: "trauma-informed-counseling",
+    title: "Trauma-Informed Counseling",
+    icon: "trauma",
+    description:
+      "A supportive approach that recognizes how difficult or traumatic experiences can influence emotions, relationships, behaviors, and everyday functioning.",
+  },
+  {
+    slug: "life-transitions",
+    title: "Life Transitions",
+    icon: "transitions",
+    description:
+      "Support during periods of significant change, including relationship changes, family transitions, career changes, adjustment difficulties, grief, and other major life events.",
+  },
+  {
+    slug: "self-esteem-personal-growth",
+    title: "Self-Esteem & Personal Growth",
+    icon: "growth",
+    description:
+      "Counseling focused on developing greater self-awareness, confidence, healthy boundaries, coping skills, and emotional resilience.",
+  },
+  {
+    slug: "coping-emotional-regulation",
+    title: "Coping & Emotional Regulation",
+    icon: "coping",
+    description:
+      "Learn practical strategies for identifying emotions, managing distress, improving coping skills, and responding to difficult situations in healthier ways.",
+  },
+];
+
+export const bilingual = {
+  heading: "Counseling in English & Spanish",
+  english: [
+    "Mental health conversations can feel deeply personal, and sometimes it is easier to express emotions in the language that feels most natural.",
+    "Sunset Counseling Center, PLLC proudly offers counseling services in English and Spanish.",
+  ],
+  spanish: {
+    heading: "Servicios de consejería disponibles en inglés y español.",
+    body: "Nuestro objetivo es ofrecer un espacio seguro, respetuoso y compasivo donde cada persona pueda sentirse escuchada y apoyada durante su proceso.",
+  },
+};
+
+export const sessionFormats = {
+  inPerson: {
+    title: "In-Person Counseling",
+    body: "Private, comfortable counseling sessions are available at our McAllen office.",
+    officeLabel: "McAllen Office",
+    cta: "Get Directions",
+  },
+  telehealth: {
+    title: "Telehealth Counseling",
+    body: [
+      "Secure virtual counseling sessions are available for eligible clients located in Texas.",
+      "Telehealth allows clients to attend counseling from a private location without traveling to the office.",
+    ],
+    cta: "Request a Telehealth Appointment",
+  },
+};
+
+export const evaluations = {
+  heading: "Clinical & Professional Evaluations",
+  intro:
+    "Sunset Counseling Center may also provide clinical evaluations and professional mental health documentation when appropriate and within the counselor’s professional scope of practice.",
+  detail:
+    "Evaluation services may include clinical interviews, relevant screening or assessment measures, review of available documentation, and preparation of a professional written report when indicated.",
+  discussLead:
+    "Individuals or attorneys seeking an evaluation are encouraged to contact the office to discuss:",
+  discussItems: [
+    "Purpose of the evaluation",
+    "Required documentation",
+    "Fees",
+    "Scheduling",
+    "Applicable deadlines",
+  ],
+  disclaimer:
+    "An evaluation does not guarantee a particular diagnosis, clinical conclusion, legal finding, or case outcome.",
+  cta: "Discuss an Evaluation",
+};
+
+export const referrals = {
+  heading: "For Attorneys & Professional Referrals",
+  paragraphs: [
+    "Sunset Counseling Center welcomes referrals from attorneys, healthcare professionals, community organizations, and other professionals.",
+    "For evaluation referrals, please contact the office with the type and purpose of the requested evaluation, applicable deadlines, and any documentation that may need to be reviewed.",
+    "Professional collaboration is available when appropriate and with the client’s written authorization.",
+  ],
+  audiences: [
+    "Attorneys",
+    "Healthcare professionals",
+    "Community organizations",
+    "Other referral partners",
+  ],
+  checklist: [
+    "Type and purpose of the requested evaluation",
+    "Applicable deadlines",
+    "Documentation that may need to be reviewed",
+  ],
+  cta: "Professional Referral Inquiry",
+};
+
+export const insurance = {
+  heading: "Insurance & Payment",
+  lead: "Insurance is accepted.",
+  paragraphs: [
+    "Coverage for behavioral health services varies depending on the client’s insurance plan, provider network, deductible, and specific service requested.",
+    "Clients are encouraged to verify their behavioral health benefits before beginning services.",
+    "Self-pay options may also be available.",
+    "Please contact Sunset Counseling Center for current information regarding accepted insurance plans, self-pay rates, and evaluation fees.",
+  ],
+  cta: "Verify Insurance & Payment Information",
+};
+
+export type FAQ = { question: string; answer: string };
+
+export const faqs: FAQ[] = [
+  {
+    question: "Do you offer counseling in Spanish?",
+    answer: "Yes. Counseling services are available in both English and Spanish.",
+  },
+  {
+    question: "Do you offer virtual appointments?",
+    answer: "Yes. Telehealth counseling is available for eligible clients located in Texas.",
+  },
+  {
+    question: "Do you offer in-person appointments?",
+    answer: "Yes. In-person services are available at the McAllen location.",
+  },
+  {
+    question: "Do you accept insurance?",
+    answer:
+      "Insurance is accepted. Please contact the office to verify current insurance participation and coverage.",
+  },
+  {
+    question: "How long are counseling sessions?",
+    answer:
+      "The length and frequency of sessions depend on the service provided and the client’s individual treatment needs.",
+  },
+  {
+    question: "Is counseling confidential?",
+    answer:
+      "Protecting client privacy is an important part of the counseling relationship. Information discussed in counseling is generally confidential, subject to applicable laws, professional requirements, and specific exceptions that will be reviewed as part of the informed-consent process.",
+  },
+];
+
+export const appointment = {
+  heading: "Take the First Step",
+  paragraphs: [
+    "You do not have to have everything figured out before beginning counseling.",
+    "Whether you are looking for emotional support, healthier coping strategies, greater self-understanding, or guidance through a difficult period, Sunset Counseling Center is here to provide compassionate professional support.",
+  ],
+  formPrivacyNotice:
+    "Please do not use this form for emergencies or to share detailed or highly sensitive clinical information. Share only what is needed to arrange a first conversation — details can be discussed privately with the counselor.",
+};
+
+/** The emergency guidance itself is rendered with tel: links in EmergencyNotice.tsx. */
+export const emergencyNotice = {
+  disclaimer:
+    "Information provided on this website is for general informational purposes and is not a substitute for individualized mental health care, medical advice, diagnosis, or emergency services.",
+};
+
+/** Options for the appointment inquiry form. Keep values stable — they are sent with submissions. */
+export const formOptions = {
+  reason: [
+    { value: "counseling", label: "Counseling appointment" },
+    { value: "telehealth", label: "Telehealth appointment" },
+    { value: "evaluation", label: "Evaluation inquiry" },
+    { value: "referral", label: "Professional referral" },
+    { value: "insurance", label: "Insurance & payment question" },
+  ],
+  contactMethod: [
+    { value: "phone", label: "Phone call" },
+    { value: "text", label: "Text message" },
+    { value: "email", label: "Email" },
+  ],
+  format: [
+    { value: "in-person", label: "In-person" },
+    { value: "telehealth", label: "Telehealth" },
+    { value: "not-sure", label: "Not sure yet" },
+  ],
+  language: [
+    { value: "english", label: "English" },
+    { value: "spanish", label: "Español" },
+    { value: "either", label: "Either" },
+  ],
+} as const;

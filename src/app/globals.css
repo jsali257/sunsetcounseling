@@ -1,26 +1,241 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Warm neutrals */
+  --color-cream-50: #fdfaf6;
+  --color-cream-100: #faf4ec;
+  --color-sand-100: #f5ebe0;
+  --color-sand-200: #ecdccb;
+  --color-sand-300: #dfc8b2;
+
+  /* Muted peach */
+  --color-peach-100: #fbeadf;
+  --color-peach-200: #f5d5c0;
+  --color-peach-300: #ecbc9e;
+
+  /* Soft terracotta — 600+ are text/button safe on light backgrounds */
+  --color-terracotta-300: #df9d80;
+  --color-terracotta-400: #d0825f;
+  --color-terracotta-500: #bd6847;
+  --color-terracotta-600: #a4543a;
+  --color-terracotta-700: #8b452f;
+  --color-terracotta-800: #6f3725;
+
+  /* Natural sage */
+  --color-sage-100: #e9ede3;
+  --color-sage-200: #d5dccb;
+  --color-sage-300: #b6c1a8;
+  --color-sage-500: #7d8c6f;
+  --color-sage-600: #637357;
+  --color-sage-700: #4c5a42;
+
+  /* Warm dark brown typography */
+  --color-ink-950: #211915;
+  --color-ink-900: #2d231e;
+  --color-ink-800: #3c2f29;
+  --color-ink-700: #4d3f38;
+  --color-ink-600: #5f5048;
+  --color-ink-500: #74645b;
+
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --shadow-soft: 0 1px 2px rgb(45 35 30 / 0.04), 0 8px 24px -12px rgb(45 35 30 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(45 35 30 / 0.04), 0 18px 40px -18px rgb(45 35 30 / 0.22);
+
+  --ease-gentle: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Full desktop navigation needs room for eight links plus the primary CTA. */
+  --breakpoint-nav: 85rem;
+  --breakpoint-wide: 102.5rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Keep anchored sections clear of the sticky header */
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-cream-100);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    font-variation-settings: "SOFT" 50;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-peach-200);
+    color: var(--color-ink-950);
+  }
+
+  /* Clear, consistent keyboard focus */
+  :focus-visible {
+    outline: 2px solid var(--color-terracotta-600);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Subtle scroll reveal — only hides content once JS has confirmed it can reveal it. */
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 700ms var(--ease-gentle),
+      transform 700ms var(--ease-gentle);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  @media print {
+    .js .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .js .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .js .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* FAQ accordion (native <details>) */
+  .faq-item summary {
+    list-style: none;
+  }
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq-item .faq-icon {
+    transition: transform 300ms var(--ease-gentle);
+  }
+  .faq-item[open] .faq-icon {
+    transform: rotate(180deg);
+  }
+  @supports (interpolate-size: allow-keywords) {
+    .faq-item {
+      interpolate-size: allow-keywords;
+    }
+    .faq-item::details-content {
+      height: 0;
+      overflow: clip;
+      transition:
+        height 350ms var(--ease-gentle),
+        content-visibility 350ms allow-discrete;
+    }
+    .faq-item[open]::details-content {
+      height: auto;
+    }
+  }
+
+  /* Mobile navigation drawer (native <dialog>) */
+  .nav-drawer {
+    margin: 0 0 0 auto;
+    height: 100dvh;
+    max-height: 100dvh;
+    width: min(24rem, 100vw);
+    max-width: 100vw;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    transform: translateX(100%);
+    transition:
+      transform 380ms var(--ease-gentle),
+      overlay 380ms allow-discrete,
+      display 380ms allow-discrete;
+  }
+  .nav-drawer[open] {
+    transform: none;
+  }
+  @starting-style {
+    .nav-drawer[open] {
+      transform: translateX(100%);
+    }
+  }
+  .nav-drawer::backdrop {
+    background: rgb(33 25 21 / 0);
+    backdrop-filter: blur(0);
+    transition:
+      background 380ms var(--ease-gentle),
+      backdrop-filter 380ms var(--ease-gentle),
+      overlay 380ms allow-discrete,
+      display 380ms allow-discrete;
+  }
+  .nav-drawer[open]::backdrop {
+    background: rgb(33 25 21 / 0.35);
+    backdrop-filter: blur(2px);
+  }
+  @starting-style {
+    .nav-drawer[open]::backdrop {
+      background: rgb(33 25 21 / 0);
+      backdrop-filter: blur(0);
+    }
+  }
+
+  /* Rich text for legal pages */
+  .prose-legal h2 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+    color: var(--color-ink-900);
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .prose-legal p,
+  .prose-legal li {
+    color: var(--color-ink-700);
+    line-height: 1.75;
+  }
+  .prose-legal p + p {
+    margin-top: 1rem;
+  }
+  .prose-legal ul {
+    margin-top: 0.75rem;
+    padding-left: 1.25rem;
+    list-style: disc;
+  }
+  .prose-legal li + li {
+    margin-top: 0.4rem;
+  }
+  .prose-legal li::marker {
+    color: var(--color-terracotta-500);
+  }
+  .prose-legal a {
+    color: var(--color-terracotta-700);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
