@@ -1,6 +1,7 @@
 import "server-only";
 import { formOptions, site } from "@/content/site";
 import { labelFor, type Inquiry } from "./inquiry";
+import { buildInquiryEmail } from "./email/inquiry-email";
 
 /**
  * Notifies the practice about a new appointment inquiry.
@@ -44,10 +45,13 @@ export async function deliverInquiry(
         inquiry.message || "—",
       ].join("\n");
 
-  const { RESEND_API_KEY, CONTACT_TO_EMAIL, CONTACT_FROM_EMAIL, CONTACT_WEBHOOK_URL } = process.env;
+  const { RESEND_API_KEY, CONTACT_TO_EMAIL, CONTACT_FROM_EMAIL, CONTACT_REPLY_TO, CONTACT_WEBHOOK_URL } =
+    process.env;
 
   try {
     if (RESEND_API_KEY && CONTACT_TO_EMAIL) {
+      const recipients = CONTACT_TO_EMAIL.split(",").map((a) => a.trim()).filter(Boolean);
+      const email = buildInquiryEmail(inquiry, { dashboardUrl });
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -57,11 +61,15 @@ export async function deliverInquiry(
         body: JSON.stringify({
           from: CONTACT_FROM_EMAIL ?? `${site.shortName} Website <onboarding@resend.dev>`,
           // Comma-separated to notify several people, e.g. "a@x.com, b@x.com".
-          to: CONTACT_TO_EMAIL.split(",").map((a) => a.trim()).filter(Boolean),
-          // Only reply directly to the visitor when their details are in the email.
-          reply_to: dashboardUrl ? undefined : inquiry.email || undefined,
-          subject: `New website inquiry — ${reason}`,
-          text: summary,
+          to: recipients,
+          // Replies go to a real, monitored mailbox. When the visitor's details are
+          // in the email (no database), replying goes straight to the visitor.
+          reply_to: dashboardUrl
+            ? CONTACT_REPLY_TO?.trim() || recipients[0]
+            : inquiry.email || CONTACT_REPLY_TO?.trim() || recipients[0],
+          subject: email.subject,
+          html: email.html,
+          text: email.text,
         }),
         signal: AbortSignal.timeout(10_000),
       });
