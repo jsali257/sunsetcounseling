@@ -6,7 +6,7 @@ import { labelFor, type Inquiry } from "./inquiry";
  * Notifies the practice about a new appointment inquiry.
  *
  * Configure ONE of the following in the deployment environment:
- *   - RESEND_API_KEY + CONTACT_TO_EMAIL (+ optional CONTACT_FROM_EMAIL) to send an email via Resend
+ *   - RESEND_API_KEY + CONTACT_TO_EMAIL (+ CONTACT_FROM_EMAIL on your Resend-verified domain) to send an email via Resend
  *   - CONTACT_WEBHOOK_URL to POST JSON to a form/CRM endpoint
  *
  * When the inquiry is stored in the database (`dashboardUrl` is passed), the
@@ -56,7 +56,8 @@ export async function deliverInquiry(
         },
         body: JSON.stringify({
           from: CONTACT_FROM_EMAIL ?? `${site.shortName} Website <onboarding@resend.dev>`,
-          to: [CONTACT_TO_EMAIL],
+          // Comma-separated to notify several people, e.g. "a@x.com, b@x.com".
+          to: CONTACT_TO_EMAIL.split(",").map((a) => a.trim()).filter(Boolean),
           // Only reply directly to the visitor when their details are in the email.
           reply_to: dashboardUrl ? undefined : inquiry.email || undefined,
           subject: `New website inquiry — ${reason}`,
@@ -64,6 +65,10 @@ export async function deliverInquiry(
         }),
         signal: AbortSignal.timeout(10_000),
       });
+      if (!res.ok) {
+        // Resend explains rejections (e.g. unverified domain); it never echoes the email body.
+        console.error(`Resend rejected the notification (${res.status}):`, await res.text().catch(() => ""));
+      }
       return res.ok;
     }
 
