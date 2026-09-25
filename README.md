@@ -88,6 +88,7 @@ With the database connected, the alert is privacy-minimal: only the inquiry type
 2. Run `npm run create-admin -- --email you@example.com --name "Your Name"`. It prints a one-time temporary password.
 3. Sign in at `/admin/login`. You'll be asked to choose your own password.
 4. Add employees under **Team**. Each gets a temporary password to share privately, and chooses their own at first sign-in.
+5. Choose who receives new-inquiry alert emails under **Notifications**. Use **Send test** to confirm delivery. If that list is empty, alerts go to `CONTACT_TO_EMAIL`.
 
 Running `create-admin` again with an existing email resets that account to an active administrator with a new temporary password. It's the recovery path if every admin is locked out.
 
@@ -99,6 +100,7 @@ Running `create-admin` again with an existing email resets that account to an ac
 | Update status, add notes | ✓ | ✓ |
 | Stats dashboard | | ✓ |
 | Add, deactivate, reset team members | | ✓ |
+| Manage who receives inquiry alerts | | ✓ |
 | Audit log, CSV export, delete inquiries | | ✓ |
 
 **Security design**

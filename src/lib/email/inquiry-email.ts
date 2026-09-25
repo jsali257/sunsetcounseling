@@ -112,7 +112,10 @@ function textLayout({ heading, intro, rows, button, note }: Parameters<typeof ht
   ].join("\n");
 }
 
-export function buildInquiryEmail(inquiry: Inquiry, { dashboardUrl }: { dashboardUrl?: string }) {
+export function buildInquiryEmail(
+  inquiry: Inquiry,
+  { dashboardUrl, test = false }: { dashboardUrl?: string; test?: boolean },
+) {
   const reason = labelFor(formOptions.reason, inquiry.reason);
   const received = `${formatDateTime(new Date())} (Central Time)`;
 
@@ -143,8 +146,14 @@ export function buildInquiryEmail(inquiry: Inquiry, { dashboardUrl }: { dashboar
         ] satisfies Row[],
       };
 
+  if (test) {
+    content.heading = "Test: new inquiry alert";
+    content.intro =
+      "This is a test sent from the staff dashboard. When someone submits the appointment request form, you’ll receive an email like this one.";
+  }
+
   return {
-    subject: `New website inquiry: ${reason}`,
+    subject: test ? "Test: new website inquiry alert" : `New website inquiry: ${reason}`,
     html: htmlLayout(content),
     text: textLayout(content),
   };

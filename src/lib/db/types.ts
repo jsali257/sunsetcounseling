@@ -95,3 +95,17 @@ export type AuditEntry = {
   targetId?: string;
   detail?: string;
 };
+
+export type NotificationRecipient = {
+  email: string;
+  name?: string;
+  addedAt: Date;
+  addedByName: string;
+};
+
+/** Single document holding who receives new-inquiry alert emails. */
+export type NotificationSettingsDoc = {
+  _id: "notifications";
+  recipients: NotificationRecipient[];
+  updatedAt: Date;
+};

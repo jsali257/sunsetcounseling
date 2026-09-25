@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Inbox, ChartColumn, Users, ScrollText, UserRound, type LucideIcon } from "lucide-react";
+import { Inbox, ChartColumn, Users, BellRing, ScrollText, UserRound, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 type Item = { href: string; label: string; icon: LucideIcon; adminOnly?: boolean; badge?: number };
@@ -13,6 +13,7 @@ export function AdminNav({ isAdmin, newCount }: { isAdmin: boolean; newCount: nu
     { href: "/admin", label: "Inquiries", icon: Inbox, badge: newCount },
     { href: "/admin/stats", label: "Stats", icon: ChartColumn, adminOnly: true },
     { href: "/admin/team", label: "Team", icon: Users, adminOnly: true },
+    { href: "/admin/notifications", label: "Notifications", icon: BellRing, adminOnly: true },
     { href: "/admin/audit", label: "Audit log", icon: ScrollText, adminOnly: true },
     { href: "/admin/account", label: "My account", icon: UserRound },
   ];

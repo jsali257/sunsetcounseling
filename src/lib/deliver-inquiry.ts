@@ -1,14 +1,17 @@
 import "server-only";
-import { formOptions, site } from "@/content/site";
+import { formOptions } from "@/content/site";
 import { labelFor, type Inquiry } from "./inquiry";
 import { buildInquiryEmail } from "./email/inquiry-email";
+import { isResendConfigured, sendEmails } from "./email/resend";
+import { getAlertRecipients } from "./notifications";
 
 /**
  * Notifies the practice about a new appointment inquiry.
  *
- * Configure ONE of the following in the deployment environment:
- *   - RESEND_API_KEY + CONTACT_TO_EMAIL (+ CONTACT_FROM_EMAIL on your Resend-verified domain) to send an email via Resend
- *   - CONTACT_WEBHOOK_URL to POST JSON to a form/CRM endpoint
+ * Email (Resend): RESEND_API_KEY + CONTACT_FROM_EMAIL on your Resend-verified domain.
+ * Recipients are managed on the dashboard's Notifications page, falling back to
+ * CONTACT_TO_EMAIL. Each recipient receives their own copy.
+ * Webhook: CONTACT_WEBHOOK_URL receives a JSON POST (used when email isn't configured).
  *
  * When the inquiry is stored in the database (`dashboardUrl` is passed), the
  * notification is privacy-minimal: it contains only the inquiry type and a link
@@ -27,11 +30,7 @@ export async function deliverInquiry(
 ): Promise<boolean> {
   const reason = labelFor(formOptions.reason, inquiry.reason);
   const summary = dashboardUrl
-    ? [
-        `A new ${reason.toLowerCase()} was submitted on the website.`,
-        "",
-        `Sign in to view it: ${dashboardUrl}`,
-      ].join("\n")
+    ? `A new ${reason.toLowerCase()} was submitted on the website: ${dashboardUrl}`
     : [
         `Reason: ${reason}`,
         `Name: ${inquiry.name}`,
@@ -45,56 +44,43 @@ export async function deliverInquiry(
         inquiry.message || "—",
       ].join("\n");
 
-  const { RESEND_API_KEY, CONTACT_TO_EMAIL, CONTACT_FROM_EMAIL, CONTACT_REPLY_TO, CONTACT_WEBHOOK_URL } =
-    process.env;
-
-  try {
-    if (RESEND_API_KEY && CONTACT_TO_EMAIL) {
-      const recipients = CONTACT_TO_EMAIL.split(",").map((a) => a.trim()).filter(Boolean);
+  if (isResendConfigured()) {
+    const { emails: recipients } = await getAlertRecipients();
+    if (recipients.length) {
       const email = buildInquiryEmail(inquiry, { dashboardUrl });
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: CONTACT_FROM_EMAIL ?? `${site.shortName} Website <onboarding@resend.dev>`,
-          // Comma-separated to notify several people, e.g. "a@x.com, b@x.com".
-          to: recipients,
+      const configuredReplyTo = process.env.CONTACT_REPLY_TO?.trim();
+      const error = await sendEmails(
+        recipients.map((to) => ({
+          to,
+          ...email,
           // Replies go to a real, monitored mailbox. When the visitor's details are
           // in the email (no database), replying goes straight to the visitor.
-          reply_to: dashboardUrl
-            ? CONTACT_REPLY_TO?.trim() || recipients[0]
-            : inquiry.email || CONTACT_REPLY_TO?.trim() || recipients[0],
-          subject: email.subject,
-          html: email.html,
-          text: email.text,
-        }),
-        signal: AbortSignal.timeout(10_000),
-      });
-      if (!res.ok) {
-        // Resend explains rejections (e.g. unverified domain); it never echoes the email body.
-        console.error(`Resend rejected the notification (${res.status}):`, await res.text().catch(() => ""));
-      }
-      return res.ok;
+          replyTo: dashboardUrl
+            ? configuredReplyTo || recipients[0]
+            : inquiry.email || configuredReplyTo || recipients[0],
+        })),
+      );
+      return error === null;
     }
+  }
 
-    if (CONTACT_WEBHOOK_URL) {
+  const webhook = process.env.CONTACT_WEBHOOK_URL?.trim();
+  if (webhook) {
+    try {
       const payload = dashboardUrl
         ? { event: "inquiry.created", reason: inquiry.reason, dashboardUrl }
         : { ...inquiry, summary };
-      const res = await fetch(CONTACT_WEBHOOK_URL, {
+      const res = await fetch(webhook, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...payload, submittedAt: new Date().toISOString() }),
         signal: AbortSignal.timeout(10_000),
       });
       return res.ok;
+    } catch (error) {
+      console.error("Inquiry webhook failed:", error instanceof Error ? error.message : error);
+      return false;
     }
-  } catch (error) {
-    console.error("Inquiry notification failed:", error instanceof Error ? error.message : error);
-    return false;
   }
 
   // No notification channel configured.

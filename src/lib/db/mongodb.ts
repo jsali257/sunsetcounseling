@@ -4,6 +4,7 @@ import type {
   AuditEntry,
   InquiryDoc,
   LoginAttempt,
+  NotificationSettingsDoc,
   SessionDoc,
   UserDoc,
 } from "./types";
@@ -58,6 +59,7 @@ export async function collections() {
     inquiries: db.collection<InquiryDoc>("inquiries"),
     audit: db.collection<AuditEntry>("audit_log"),
     loginAttempts: db.collection<LoginAttempt>("login_attempts"),
+    settings: db.collection<NotificationSettingsDoc>("settings"),
   };
 }
 
