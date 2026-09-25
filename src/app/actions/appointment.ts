@@ -2,9 +2,12 @@
 
 import { site } from "@/content/site";
 import { deliverInquiry } from "@/lib/deliver-inquiry";
+import { isDatabaseConfigured } from "@/lib/db/mongodb";
+import { createInquiry } from "@/lib/inquiries/repository";
 import {
   inquiryFields,
   validateInquiry,
+  type Inquiry,
   type InquiryField,
   type InquiryState,
 } from "@/lib/inquiry";
@@ -32,7 +35,7 @@ export async function submitAppointmentRequest(
     };
   }
 
-  const delivered = await deliverInquiry({
+  const inquiry: Inquiry = {
     reason: values.reason,
     name: values.name,
     phone: values.phone,
@@ -41,15 +44,29 @@ export async function submitAppointmentRequest(
     format: values.format,
     language: values.language,
     message: values.message,
-  });
+  };
 
-  if (!delivered) {
-    return {
-      status: "error",
-      message: `We couldn’t send your request right now. Please call the office at ${site.phone.display}.`,
-      values,
-    };
+  const failure: InquiryState = {
+    status: "error",
+    message: `We couldn’t send your request right now. Please call the office at ${site.phone.display}.`,
+    values,
+  };
+
+  if (isDatabaseConfigured()) {
+    // The database is the record of truth; the email/webhook is only an alert.
+    let id;
+    try {
+      id = await createInquiry(inquiry);
+    } catch (error) {
+      console.error("Saving inquiry failed:", error instanceof Error ? error.message : error);
+      return failure;
+    }
+    const notified = await deliverInquiry(inquiry, {
+      dashboardUrl: new URL(`/admin/inquiries/${id}`, site.url).toString(),
+    });
+    if (!notified) console.warn(`Inquiry ${id} saved, but the notification was not sent.`);
+    return { status: "success" };
   }
 
-  return { status: "success" };
+  return (await deliverInquiry(inquiry)) ? { status: "success" } : failure;
 }

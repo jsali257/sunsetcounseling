@@ -37,7 +37,7 @@ export function Navbar() {
           scrolled ? "py-3" : "py-4 lg:py-5",
         )}
       >
-        <Logo />
+        <Logo preload />
 
         <nav aria-label="Main" className="hidden nav:block">
           <ul className="flex items-center gap-0.5">

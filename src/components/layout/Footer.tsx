@@ -34,7 +34,7 @@ export function Footer() {
       <Container className="relative pt-16 pb-28 sm:pb-12 lg:pt-20">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-sm">
-            <Logo tone="light" />
+            <Logo variant="full" />
             <p className="mt-6 font-serif text-xl leading-snug text-cream-50/95">{site.tagline}</p>
             <p className="mt-3 text-[0.95rem] text-cream-50/70">
               Counseling services available in English and Spanish.

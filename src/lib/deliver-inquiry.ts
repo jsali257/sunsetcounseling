@@ -3,31 +3,46 @@ import { formOptions, site } from "@/content/site";
 import { labelFor, type Inquiry } from "./inquiry";
 
 /**
- * Delivers an appointment inquiry to the practice.
+ * Notifies the practice about a new appointment inquiry.
  *
  * Configure ONE of the following in the deployment environment:
  *   - RESEND_API_KEY + CONTACT_TO_EMAIL (+ optional CONTACT_FROM_EMAIL) to send an email via Resend
- *   - CONTACT_WEBHOOK_URL to POST the inquiry as JSON to a form/CRM endpoint
+ *   - CONTACT_WEBHOOK_URL to POST JSON to a form/CRM endpoint
+ *
+ * When the inquiry is stored in the database (`dashboardUrl` is passed), the
+ * notification is privacy-minimal: it contains only the inquiry type and a link
+ * to the dashboard, never the person's name, contact details, or message.
+ * Without a database, the full inquiry is sent so it isn't lost.
  *
  * Before choosing a provider, the practice should confirm whether it will sign a
  * Business Associate Agreement if one is required. Do not describe the form as
  * HIPAA-compliant unless the deployed systems and agreements support that claim.
  *
- * Returns true when the inquiry was handed off successfully.
+ * Returns true when the notification was handed off successfully.
  */
-export async function deliverInquiry(inquiry: Inquiry): Promise<boolean> {
-  const summary = [
-    `Reason: ${labelFor(formOptions.reason, inquiry.reason)}`,
-    `Name: ${inquiry.name}`,
-    `Phone: ${inquiry.phone || "—"}`,
-    `Email: ${inquiry.email || "—"}`,
-    `Preferred contact: ${labelFor(formOptions.contactMethod, inquiry.contactMethod)}`,
-    `Session format: ${labelFor(formOptions.format, inquiry.format)}`,
-    `Preferred language: ${labelFor(formOptions.language, inquiry.language)}`,
-    "",
-    "Message:",
-    inquiry.message || "—",
-  ].join("\n");
+export async function deliverInquiry(
+  inquiry: Inquiry,
+  { dashboardUrl }: { dashboardUrl?: string } = {},
+): Promise<boolean> {
+  const reason = labelFor(formOptions.reason, inquiry.reason);
+  const summary = dashboardUrl
+    ? [
+        `A new ${reason.toLowerCase()} was submitted on the website.`,
+        "",
+        `Sign in to view it: ${dashboardUrl}`,
+      ].join("\n")
+    : [
+        `Reason: ${reason}`,
+        `Name: ${inquiry.name}`,
+        `Phone: ${inquiry.phone || "—"}`,
+        `Email: ${inquiry.email || "—"}`,
+        `Preferred contact: ${labelFor(formOptions.contactMethod, inquiry.contactMethod)}`,
+        `Session format: ${labelFor(formOptions.format, inquiry.format)}`,
+        `Preferred language: ${labelFor(formOptions.language, inquiry.language)}`,
+        "",
+        "Message:",
+        inquiry.message || "—",
+      ].join("\n");
 
   const { RESEND_API_KEY, CONTACT_TO_EMAIL, CONTACT_FROM_EMAIL, CONTACT_WEBHOOK_URL } = process.env;
 
@@ -42,8 +57,9 @@ export async function deliverInquiry(inquiry: Inquiry): Promise<boolean> {
         body: JSON.stringify({
           from: CONTACT_FROM_EMAIL ?? `${site.shortName} Website <onboarding@resend.dev>`,
           to: [CONTACT_TO_EMAIL],
-          reply_to: inquiry.email || undefined,
-          subject: `New website inquiry — ${labelFor(formOptions.reason, inquiry.reason)}`,
+          // Only reply directly to the visitor when their details are in the email.
+          reply_to: dashboardUrl ? undefined : inquiry.email || undefined,
+          subject: `New website inquiry — ${reason}`,
           text: summary,
         }),
         signal: AbortSignal.timeout(10_000),
@@ -52,24 +68,26 @@ export async function deliverInquiry(inquiry: Inquiry): Promise<boolean> {
     }
 
     if (CONTACT_WEBHOOK_URL) {
+      const payload = dashboardUrl
+        ? { event: "inquiry.created", reason: inquiry.reason, dashboardUrl }
+        : { ...inquiry, summary };
       const res = await fetch(CONTACT_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...inquiry, summary, submittedAt: new Date().toISOString() }),
+        body: JSON.stringify({ ...payload, submittedAt: new Date().toISOString() }),
         signal: AbortSignal.timeout(10_000),
       });
       return res.ok;
     }
   } catch (error) {
-    console.error("Inquiry delivery failed:", error instanceof Error ? error.message : error);
+    console.error("Inquiry notification failed:", error instanceof Error ? error.message : error);
     return false;
   }
 
-  // No delivery configured.
+  // No notification channel configured.
   if (process.env.NODE_ENV !== "production") {
-    console.info("[dev] Appointment inquiry received (no delivery configured):\n" + summary);
+    console.info("[dev] Inquiry notification (no email/webhook configured):\n" + summary);
     return true;
   }
-  console.error("Inquiry delivery is not configured. Set RESEND_API_KEY/CONTACT_TO_EMAIL or CONTACT_WEBHOOK_URL.");
   return false;
 }

@@ -2,9 +2,11 @@ import { Phone } from "lucide-react";
 import { site } from "@/content/site";
 import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 
 export default function NotFound() {
   return (
+    <SiteChrome>
     <section className="py-24 sm:py-32">
       <Container size="narrow" className="text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta-700">
@@ -26,5 +28,6 @@ export default function NotFound() {
         </div>
       </Container>
     </section>
+    </SiteChrome>
   );
 }

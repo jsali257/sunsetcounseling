@@ -29,6 +29,7 @@ export function practiceSchema() {
     url: absoluteUrl("/"),
     telephone: site.phone.e164,
     image: absoluteUrl("/opengraph-image"),
+    logo: absoluteUrl("/sunsetlogo.png"),
     address: {
       "@type": "PostalAddress",
       streetAddress: site.address.street,

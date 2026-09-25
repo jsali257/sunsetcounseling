@@ -1,11 +1,17 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { site } from "@/content/site";
 
 export const alt = `${site.name} — ${site.tagline}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OpengraphImage() {
+// Link-preview card: the practice logo on the site's cream background.
+export default async function OpengraphImage() {
+  const logo = await readFile(join(process.cwd(), "public/brand/logo-full.png"));
+  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
@@ -13,43 +19,21 @@ export default function OpengraphImage() {
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
+          alignItems: "center",
           justifyContent: "space-between",
-          padding: "72px 80px",
-          background: "linear-gradient(180deg, #faf4ec 0%, #f8e0cd 70%, #f1c7aa 100%)",
+          padding: "0 90px",
+          background: "linear-gradient(135deg, #fdfaf6 0%, #faf4ec 55%, #f5e3d4 100%)",
           color: "#2d231e",
-          position: "relative",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            right: 90,
-            bottom: 150,
-            width: 300,
-            height: 150,
-            borderTopLeftRadius: 150,
-            borderTopRightRadius: 150,
-            background: "#bd6847",
-            opacity: 0.9,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 150,
-            background: "#7d8c6f",
-          }}
-        />
-        <div style={{ display: "flex", fontSize: 26, letterSpacing: 6, color: "#8b452f" }}>
-          McALLEN, TEXAS · ENGLISH &amp; SPANISH
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", maxWidth: 760, marginBottom: 150 }}>
-          <div style={{ fontSize: 72, lineHeight: 1.05 }}>{site.name}</div>
-          <div style={{ fontSize: 36, marginTop: 24, color: "#4d3f38" }}>{site.tagline}</div>
+        {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse needs a plain img */}
+        <img src={logoSrc} width={460} height={403} alt="" />
+        <div style={{ display: "flex", flexDirection: "column", maxWidth: 520 }}>
+          <div style={{ fontSize: 52, lineHeight: 1.15 }}>{site.tagline}</div>
+          <div style={{ display: "flex", marginTop: 28, height: 3, width: 90, background: "#bd6847" }} />
+          <div style={{ fontSize: 28, marginTop: 28, color: "#5f5048", lineHeight: 1.4 }}>
+            Counseling in English &amp; Spanish · McAllen, Texas &amp; Telehealth
+          </div>
         </div>
       </div>
     ),

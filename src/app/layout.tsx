@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, DM_Sans } from "next/font/google";
 import { site } from "@/content/site";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { EmergencyNotice } from "@/components/layout/EmergencyNotice";
-import { MobileCTABar } from "@/components/layout/MobileCTABar";
-import { JsonLd, practiceSchema, websiteSchema } from "@/lib/structured-data";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -79,21 +74,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="flex min-h-dvh flex-col">
-        <a
-          href="#main"
-          className="sr-only z-50 rounded-full bg-ink-900 px-5 py-3 text-cream-50 focus:not-sr-only focus:fixed focus:top-4 focus:left-4"
-        >
-          Skip to main content
-        </a>
-        <JsonLd data={practiceSchema()} />
-        <JsonLd data={websiteSchema()} />
-        <Navbar />
-        <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
-          {children}
-        </main>
-        <EmergencyNotice />
-        <Footer />
-        <MobileCTABar />
+        {children}
       </body>
     </html>
   );

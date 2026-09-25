@@ -1,20 +1,5 @@
 import { cn } from "@/lib/cn";
 
-/** Brand mark: a setting sun resting on soft horizon lines. */
-export function LogoMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 40 40" aria-hidden="true" className={cn("shrink-0", className)}>
-      <path d="M8 25a12 12 0 0 1 24 0Z" fill="var(--color-terracotta-500)" />
-      <path d="M13.5 25a6.5 6.5 0 0 1 13 0Z" fill="var(--color-peach-200)" opacity="0.55" />
-      <g stroke="var(--color-sage-600)" strokeLinecap="round" strokeWidth="1.8" fill="none">
-        <path d="M4 29.5h32" />
-        <path d="M9.5 33.5h21" />
-        <path d="M15 37.5h10" />
-      </g>
-    </svg>
-  );
-}
-
 /** Thin botanical silhouette used as a quiet accent. */
 export function Sprig({ className }: { className?: string }) {
   return (
