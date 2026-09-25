@@ -9,9 +9,9 @@ import { buildInquiryEmail } from "@/lib/email/inquiry-email";
 import { isResendConfigured, sendEmails } from "@/lib/email/resend";
 import { site } from "@/content/site";
 import type { ActionState } from "@/lib/admin/form-state";
+import { EMAIL_RE } from "@/lib/admin/validation";
 
 const adminOnly: ActionState = { error: "Only administrators can manage notifications." };
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function addRecipient(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const actor = await getActionUser("admin");

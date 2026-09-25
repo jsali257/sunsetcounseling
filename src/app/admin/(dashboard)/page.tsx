@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { countByStatus, listInquiries } from "@/lib/inquiries/repository";
 import { inquiryStatuses, statusLabels, type InquiryStatus } from "@/lib/db/types";
 import { formOptions } from "@/content/site";
-import { labelFor } from "@/lib/inquiry";
+import { formatPhone, labelFor } from "@/lib/inquiry";
 import { formatDateTime, formatRelative } from "@/lib/admin/format";
 import { Card, Notice, PageTitle, StatusBadge, inputClass } from "@/components/admin/ui";
 import { cn } from "@/lib/cn";
@@ -171,7 +171,7 @@ export default async function InquiriesPage({ searchParams }: PageProps<"/admin"
                     >
                       {item.name}
                     </Link>
-                    <p className="text-ink-600">{item.phone || item.email}</p>
+                    <p className="text-ink-600">{item.phone ? formatPhone(item.phone) : item.email}</p>
                   </td>
                   <td className="col-start-1 text-ink-700 md:px-5 md:py-4">
                     {labelFor(formOptions.reason, item.reason)}

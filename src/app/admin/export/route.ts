@@ -2,7 +2,7 @@ import { getSessionUser } from "@/lib/auth/session";
 import { collections } from "@/lib/db/mongodb";
 import { statusLabels } from "@/lib/db/types";
 import { formOptions } from "@/content/site";
-import { labelFor } from "@/lib/inquiry";
+import { formatPhone, labelFor } from "@/lib/inquiry";
 import { formatDateTime } from "@/lib/admin/format";
 import { audit } from "@/lib/audit";
 
@@ -31,7 +31,7 @@ export async function GET() {
       statusLabels[r.status],
       labelFor(formOptions.reason, r.reason),
       r.name,
-      r.phone,
+      formatPhone(r.phone),
       r.email,
       labelFor(formOptions.contactMethod, r.contactMethod),
       labelFor(formOptions.format, r.format),

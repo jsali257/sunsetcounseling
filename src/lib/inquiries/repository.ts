@@ -91,3 +91,38 @@ export async function getInquiry(id: string) {
   const { inquiries } = await collections();
   return inquiries.findOne({ _id });
 }
+
+export type InquirySignature = {
+  total: number;
+  newCount: number;
+  /** Changes whenever an inquiry is added, updated, or deleted. */
+  version: string;
+};
+
+/**
+ * A tiny summary of the inquiries collection, polled by the dashboard to
+ * detect changes without re-rendering pages when nothing happened.
+ */
+export async function getInquirySignature(): Promise<InquirySignature> {
+  const { inquiries } = await collections();
+  const [row] = await inquiries
+    .aggregate<{ total: number; newCount: number; lastCreated: Date | null; lastUpdated: Date | null }>([
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          newCount: { $sum: { $cond: [{ $eq: ["$status", "new"] }, 1, 0] } },
+          lastCreated: { $max: "$createdAt" },
+          lastUpdated: { $max: "$updatedAt" },
+        },
+      },
+    ])
+    .toArray();
+  const total = row?.total ?? 0;
+  const newCount = row?.newCount ?? 0;
+  return {
+    total,
+    newCount,
+    version: [total, newCount, row?.lastCreated?.getTime() ?? 0, row?.lastUpdated?.getTime() ?? 0].join("-"),
+  };
+}

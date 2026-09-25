@@ -4,8 +4,7 @@ import { collections } from "@/lib/db/mongodb";
 import { roleLabels } from "@/lib/db/types";
 import { formatRelative, formatDateTime } from "@/lib/admin/format";
 import { Card, PageTitle } from "@/components/admin/ui";
-import { CreateUserForm, UserRowActions } from "@/components/admin/TeamForms";
-import { cn } from "@/lib/cn";
+import { CreateUserForm, TeamMemberRow } from "@/components/admin/TeamForms";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -28,35 +27,30 @@ export default async function TeamPage() {
         <Card className="overflow-hidden">
           <h2 className="sr-only">Team members</h2>
           <ul className="divide-y divide-sand-200">
-            {members.map((m) => {
-              const isMe = m._id.equals(me._id);
-              return (
-                <li key={String(m._id)} className={cn("p-5", !m.active && "bg-sand-100/60")}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-medium text-ink-900">
-                        {m.name} {isMe && <span className="text-sm font-normal text-ink-600">(you)</span>}
-                      </p>
-                      <p className="truncate text-sm text-ink-600">{m.email}</p>
-                      <p className="mt-1 text-xs text-ink-600">
-                        {roleLabels[m.role]}
-                        {!m.active && " · Deactivated"}
-                        {m.mustChangePassword && m.active && " · Awaiting first sign-in"}
-                        {" · "}
-                        {m.lastLoginAt ? (
-                          <span title={formatDateTime(m.lastLoginAt)}>Last sign-in {formatRelative(m.lastLoginAt)}</span>
-                        ) : (
-                          "Never signed in"
-                        )}
-                      </p>
-                    </div>
-                    {!isMe && (
-                      <UserRowActions userId={String(m._id)} name={m.name} role={m.role} active={m.active} />
+            {members.map((m) => (
+              <TeamMemberRow
+                key={String(m._id)}
+                id={String(m._id)}
+                name={m.name}
+                email={m.email}
+                role={m.role}
+                active={m.active}
+                isMe={m._id.equals(me._id)}
+                meta={
+                  <>
+                    {roleLabels[m.role]}
+                    {!m.active && " · Deactivated"}
+                    {m.mustChangePassword && m.active && " · Awaiting first sign-in"}
+                    {" · "}
+                    {m.lastLoginAt ? (
+                      <span title={formatDateTime(m.lastLoginAt)}>Last sign-in {formatRelative(m.lastLoginAt)}</span>
+                    ) : (
+                      "Never signed in"
                     )}
-                  </div>
-                </li>
-              );
-            })}
+                  </>
+                }
+              />
+            ))}
           </ul>
         </Card>
 

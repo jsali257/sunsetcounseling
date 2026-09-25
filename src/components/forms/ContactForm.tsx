@@ -5,7 +5,16 @@ import { useSearchParams } from "next/navigation";
 import { ChevronDown, CircleCheck, CircleAlert, LoaderCircle, Lock, Phone } from "lucide-react";
 import { submitAppointmentRequest } from "@/app/actions/appointment";
 import { appointment, formOptions, site } from "@/content/site";
-import { MESSAGE_MAX, type InquiryField, type InquiryState } from "@/lib/inquiry";
+import {
+  MESSAGE_MAX,
+  formatPhoneAsTyped,
+  suggestEmail,
+  validateEmail,
+  validateName,
+  validatePhone,
+  type InquiryField,
+  type InquiryState,
+} from "@/lib/inquiry";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
@@ -40,6 +49,7 @@ function RadioPills({
   defaultValue,
   error,
   formId,
+  onChange,
 }: {
   legend: string;
   name: InquiryField;
@@ -47,6 +57,7 @@ function RadioPills({
   defaultValue?: string;
   error?: string;
   formId: string;
+  onChange?: () => void;
 }) {
   const errorId = `${formId}-${name}-error`;
   return (
@@ -63,6 +74,7 @@ function RadioPills({
                 name={name}
                 value={option.value}
                 defaultChecked={defaultValue === option.value}
+                onChange={onChange}
                 required
                 className="peer sr-only"
               />
@@ -89,8 +101,51 @@ export function ContactForm({ initialReason }: ContactFormProps) {
   const statusRef = useRef<HTMLDivElement>(null);
   const [messageLength, setMessageLength] = useState(state.values?.message?.length ?? 0);
 
+  const formRef = useRef<HTMLFormElement>(null);
   const v = state.values ?? {};
   const e = state.errors ?? {};
+
+  // Instant feedback: fields are checked when you leave them (and re-checked as you
+  // fix them), using the same rules the server applies on submit. A null entry means
+  // "checked and fine", which hides a stale server error for that field.
+  const [live, setLive] = useState<{ for: InquiryState; errors: Partial<Record<InquiryField, string | null>> }>({
+    for: state,
+    errors: {},
+  });
+  const liveErrors = live.for === state ? live.errors : {};
+  const err: Partial<Record<InquiryField, string>> = { ...e };
+  for (const [field, message] of Object.entries(liveErrors) as [InquiryField, string | null][]) {
+    if (message) err[field] = message;
+    else delete err[field];
+  }
+  const [emailHint, setEmailHint] = useState<string | null>(null);
+
+  const setFieldError = (field: InquiryField, message: string | null) =>
+    setLive((prev) => ({
+      for: state,
+      errors: { ...(prev.for === state ? prev.errors : {}), [field]: message },
+    }));
+
+  const checkField = (field: "name" | "phone" | "email") => {
+    const form = formRef.current;
+    if (!form) return;
+    const data = new FormData(form);
+    const method = String(data.get("contactMethod") ?? "");
+    const value = String(data.get(field) ?? "");
+    const message =
+      field === "name"
+        ? validateName(value)
+        : field === "phone"
+          ? validatePhone(value, method === "phone" || method === "text")
+          : validateEmail(value, method === "email");
+    setFieldError(field, message);
+    if (field === "email") setEmailHint(message ? null : suggestEmail(value));
+  };
+
+  /** Re-check while typing only once an error is showing, so it clears the moment it's fixed. */
+  const recheckIfShowing = (field: "name" | "phone" | "email") => {
+    if (err[field]) checkField(field);
+  };
   const reasonDefault =
     v.reason ??
     (formOptions.reason.some((r) => r.value === initialReason) ? initialReason : "counseling");
@@ -124,10 +179,10 @@ export function ContactForm({ initialReason }: ContactFormProps) {
   }
 
   const describedBy = (field: InquiryField, extra?: string) =>
-    [e[field] ? `${formId}-${field}-error` : null, extra].filter(Boolean).join(" ") || undefined;
+    [err[field] ? `${formId}-${field}-error` : null, extra].filter(Boolean).join(" ") || undefined;
 
   return (
-    <form action={formAction} noValidate className="space-y-7" aria-describedby={`${formId}-privacy`}>
+    <form ref={formRef} action={formAction} noValidate className="space-y-7" aria-describedby={`${formId}-privacy`}>
       <div
         id={`${formId}-privacy`}
         className="flex gap-3 rounded-xl border border-sand-200 bg-sand-100/70 p-4 text-sm leading-relaxed text-ink-700"
@@ -160,7 +215,7 @@ export function ContactForm({ initialReason }: ContactFormProps) {
           id={`${formId}-reason`}
           name="reason"
           defaultValue={reasonDefault}
-          aria-invalid={e.reason ? true : undefined}
+          aria-invalid={err.reason ? true : undefined}
           aria-describedby={describedBy("reason")}
           className={cn(inputClass, "appearance-none pr-11")}
         >
@@ -172,7 +227,7 @@ export function ContactForm({ initialReason }: ContactFormProps) {
         </select>
         <ChevronDown aria-hidden="true" className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-ink-600" />
         </div>
-        <FieldError id={`${formId}-reason-error`} message={e.reason} />
+        <FieldError id={`${formId}-reason-error`} message={err.reason} />
       </div>
 
       <div>
@@ -185,11 +240,13 @@ export function ContactForm({ initialReason }: ContactFormProps) {
           required
           maxLength={100}
           defaultValue={v.name}
-          aria-invalid={e.name ? true : undefined}
+          onBlur={() => checkField("name")}
+          onChange={() => recheckIfShowing("name")}
+          aria-invalid={err.name ? true : undefined}
           aria-describedby={describedBy("name")}
           className={inputClass}
         />
-        <FieldError id={`${formId}-name-error`} message={e.name} />
+        <FieldError id={`${formId}-name-error`} message={err.name} />
       </div>
 
       <div className="grid gap-7 sm:grid-cols-2 sm:gap-5">
@@ -201,12 +258,23 @@ export function ContactForm({ initialReason }: ContactFormProps) {
             type="tel"
             inputMode="tel"
             autoComplete="tel"
+            placeholder="956-601-8486"
+            maxLength={20}
             defaultValue={v.phone}
-            aria-invalid={e.phone ? true : undefined}
+            onChange={(ev) => {
+              // Add dashes as the number is typed (only when typing at the end, so edits mid-number aren't disrupted).
+              const el = ev.currentTarget;
+              if (el.selectionStart !== el.value.length) return recheckIfShowing("phone");
+              const formatted = formatPhoneAsTyped(el.value);
+              if (formatted !== el.value) el.value = formatted;
+              recheckIfShowing("phone");
+            }}
+            onBlur={() => checkField("phone")}
+            aria-invalid={err.phone ? true : undefined}
             aria-describedby={describedBy("phone")}
             className={inputClass}
           />
-          <FieldError id={`${formId}-phone-error`} message={e.phone} />
+          <FieldError id={`${formId}-phone-error`} message={err.phone} />
         </div>
         <div>
           <Label htmlFor={`${formId}-email`}>Email</Label>
@@ -217,11 +285,34 @@ export function ContactForm({ initialReason }: ContactFormProps) {
             inputMode="email"
             autoComplete="email"
             defaultValue={v.email}
-            aria-invalid={e.email ? true : undefined}
+            onBlur={() => checkField("email")}
+            onChange={() => {
+              setEmailHint(null);
+              recheckIfShowing("email");
+            }}
+            aria-invalid={err.email ? true : undefined}
             aria-describedby={describedBy("email")}
             className={inputClass}
           />
-          <FieldError id={`${formId}-email-error`} message={e.email} />
+          <FieldError id={`${formId}-email-error`} message={err.email} />
+          {emailHint && (
+            <p className="mt-2 text-sm text-ink-700" aria-live="polite">
+              Did you mean{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  const input = formRef.current?.elements.namedItem("email");
+                  if (input instanceof HTMLInputElement) input.value = emailHint;
+                  setEmailHint(null);
+                  setFieldError("email", null);
+                }}
+                className="font-medium text-terracotta-800 underline underline-offset-4"
+              >
+                {emailHint}
+              </button>
+              ?
+            </p>
+          )}
         </div>
       </div>
 
@@ -230,24 +321,31 @@ export function ContactForm({ initialReason }: ContactFormProps) {
         name="contactMethod"
         options={formOptions.contactMethod}
         defaultValue={v.contactMethod}
-        error={e.contactMethod}
+        error={err.contactMethod}
         formId={formId}
+        onChange={() => {
+          setFieldError("contactMethod", null);
+          if (err.phone || "phone" in liveErrors) checkField("phone");
+          if (err.email || "email" in liveErrors) checkField("email");
+        }}
       />
       <RadioPills
         legend="In-person or telehealth?"
         name="format"
         options={formOptions.format}
         defaultValue={formatDefault}
-        error={e.format}
+        error={err.format}
         formId={formId}
+        onChange={() => setFieldError("format", null)}
       />
       <RadioPills
         legend="Preferred language / Idioma preferido"
         name="language"
         options={formOptions.language}
         defaultValue={v.language}
-        error={e.language}
+        error={err.language}
         formId={formId}
+        onChange={() => setFieldError("language", null)}
       />
 
       <div>
@@ -265,12 +363,12 @@ export function ContactForm({ initialReason }: ContactFormProps) {
           maxLength={MESSAGE_MAX}
           defaultValue={v.message}
           onChange={(ev) => setMessageLength(ev.target.value.length)}
-          aria-invalid={e.message ? true : undefined}
+          aria-invalid={err.message ? true : undefined}
           aria-describedby={describedBy("message", `${formId}-message-hint`)}
           className={cn(inputClass, "min-h-32 resize-y")}
         />
         <div className="mt-1.5 flex justify-between gap-4">
-          <FieldError id={`${formId}-message-error`} message={e.message} />
+          <FieldError id={`${formId}-message-error`} message={err.message} />
           <p className="ml-auto text-xs text-ink-500" aria-hidden="true">
             {messageLength}/{MESSAGE_MAX}
           </p>
@@ -291,7 +389,8 @@ export function ContactForm({ initialReason }: ContactFormProps) {
             type="checkbox"
             required
             defaultChecked={v.acknowledgement === "on"}
-            aria-invalid={e.acknowledgement ? true : undefined}
+            onChange={(ev) => ev.currentTarget.checked && setFieldError("acknowledgement", null)}
+            aria-invalid={err.acknowledgement ? true : undefined}
             aria-describedby={describedBy("acknowledgement")}
             className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-sand-300 accent-terracotta-700"
           />
@@ -300,7 +399,7 @@ export function ContactForm({ initialReason }: ContactFormProps) {
             sensitive clinical information.
           </label>
         </div>
-        <FieldError id={`${formId}-acknowledgement-error`} message={e.acknowledgement} />
+        <FieldError id={`${formId}-acknowledgement-error`} message={err.acknowledgement} />
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 border-t border-sand-200 pt-7 sm:justify-between">

@@ -7,6 +7,7 @@ import { createInquiry } from "@/lib/inquiries/repository";
 import {
   inquiryFields,
   validateInquiry,
+  formatPhone,
   type Inquiry,
   type InquiryField,
   type InquiryState,
@@ -38,7 +39,7 @@ export async function submitAppointmentRequest(
   const inquiry: Inquiry = {
     reason: values.reason,
     name: values.name,
-    phone: values.phone,
+    phone: formatPhone(values.phone),
     email: values.email,
     contactMethod: values.contactMethod,
     format: values.format,

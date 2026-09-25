@@ -10,6 +10,7 @@ import { parseObjectId } from "@/lib/inquiries/repository";
 import { audit } from "@/lib/audit";
 import { roleLabels, roles, type Role } from "@/lib/db/types";
 import type { ActionState } from "@/lib/admin/form-state";
+import { EMAIL_RE, normalizeEmail, normalizeName } from "@/lib/admin/validation";
 
 const adminOnly: ActionState = { error: "Only administrators can manage team members." };
 
@@ -28,7 +29,7 @@ export async function createUser(_prev: ActionState, formData: FormData): Promis
 
   const fieldErrors: Record<string, string> = {};
   if (!name) fieldErrors.name = "Enter a name.";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) fieldErrors.email = "Enter a valid email.";
+  if (!EMAIL_RE.test(email)) fieldErrors.email = "Enter a valid email.";
   if (!roles.includes(role)) fieldErrors.role = "Choose a role.";
   if (Object.keys(fieldErrors).length) return { fieldErrors };
 
@@ -139,5 +140,52 @@ export async function resetUserPassword(userId: string): Promise<ActionState> {
     ok: true,
     message: `Temporary password for ${target.name} — shown only once. They’ve been signed out everywhere.`,
     secret: temporaryPassword,
+  };
+}
+
+export async function updateUserDetails(
+  userId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actor = await getActionUser("admin");
+  if (!actor) return adminOnly;
+  const _id = parseObjectId(userId);
+  if (!_id) return { error: "Invalid request." };
+  if (_id.equals(actor._id)) return { error: "Use the My account page to edit your own details." };
+
+  const name = normalizeName(formData.get("name"));
+  const email = normalizeEmail(formData.get("email"));
+  const fieldErrors: Record<string, string> = {};
+  if (!name) fieldErrors.name = "Enter a name.";
+  if (!EMAIL_RE.test(email)) fieldErrors.email = "Enter a valid email.";
+  if (Object.keys(fieldErrors).length) return { fieldErrors };
+
+  const { users } = await collections();
+  const target = await users.findOne({ _id }, { projection: { name: 1, email: 1 } });
+  if (!target) return { error: "This team member no longer exists." };
+  if (target.name === name && target.email === email) return { ok: true, message: "No changes to save." };
+
+  try {
+    await users.updateOne({ _id }, { $set: { name, email, updatedAt: new Date() } });
+  } catch (error) {
+    if (error instanceof MongoServerError && error.code === 11000) {
+      return { fieldErrors: { email: "Another team member already uses this email." } };
+    }
+    throw error;
+  }
+
+  const changes = [
+    target.name !== name && `name from “${target.name}” to “${name}”`,
+    target.email !== email && `email from ${target.email} to ${email}`,
+  ].filter(Boolean);
+  await audit(actor, `Changed ${target.name}’s ${changes.join(" and ")}`, { targetType: "user", targetId: email });
+  revalidatePath("/admin/team");
+  return {
+    ok: true,
+    message:
+      target.email !== email
+        ? `Saved. ${name} now signs in with ${email}.`
+        : "Saved.",
   };
 }

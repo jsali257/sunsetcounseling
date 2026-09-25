@@ -1,8 +1,15 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
-import { Copy, Check, LoaderCircle, UserPlus } from "lucide-react";
-import { createUser, resetUserPassword, setUserActive, setUserRole } from "@/app/admin/_actions/users";
+import { useActionState, useState, useTransition, type ReactNode } from "react";
+import Link from "next/link";
+import { Copy, Check, LoaderCircle, Pencil, UserPlus } from "lucide-react";
+import {
+  createUser,
+  resetUserPassword,
+  setUserActive,
+  setUserRole,
+  updateUserDetails,
+} from "@/app/admin/_actions/users";
 import { idle, type ActionState } from "@/lib/admin/form-state";
 import { roleLabels, roles, type Role } from "@/lib/db/types";
 import { Button } from "@/components/ui/Button";
@@ -91,11 +98,14 @@ export function UserRowActions({
   name,
   role,
   active,
+  leading,
 }: {
   userId: string;
   name: string;
   role: Role;
   active: boolean;
+  /** Extra control shown first in the row, e.g. the Edit button. */
+  leading?: ReactNode;
 }) {
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ActionState>(idle);
@@ -110,6 +120,7 @@ export function UserRowActions({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
+        {leading}
         <label className="sr-only" htmlFor={`role-${userId}`}>Role for {name}</label>
         <select
           id={`role-${userId}`}
@@ -162,5 +173,116 @@ export function UserRowActions({
         ) : null}
       </div>
     </div>
+  );
+}
+
+function EditUserForm({
+  userId,
+  name,
+  email,
+  onDone,
+}: {
+  userId: string;
+  name: string;
+  email: string;
+  onDone: () => void;
+}) {
+  const [state, action, pending] = useActionState(updateUserDetails.bind(null, userId), idle);
+  const e = state.fieldErrors ?? {};
+  const ids = { name: `edit-name-${userId}`, email: `edit-email-${userId}` };
+  return (
+    <form action={action} className="mt-4 space-y-3 rounded-xl border border-sand-200 bg-white p-4">
+      {state.error && <Notice tone="error">{state.error}</Notice>}
+      {state.ok && <Notice tone="success">{state.message}</Notice>}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor={ids.name} className={labelClass}>Name</label>
+          <input id={ids.name} name="name" defaultValue={name} required maxLength={100} autoComplete="off"
+            aria-invalid={e.name ? true : undefined} aria-describedby={e.name ? `${ids.name}-error` : undefined}
+            className={inputClass} />
+          <FieldError id={`${ids.name}-error`} message={e.name} />
+        </div>
+        <div>
+          <label htmlFor={ids.email} className={labelClass}>Email (used to sign in)</label>
+          <input id={ids.email} name="email" type="email" defaultValue={email} required autoComplete="off"
+            aria-invalid={e.email ? true : undefined} aria-describedby={e.email ? `${ids.email}-error` : undefined}
+            className={inputClass} />
+          <FieldError id={`${ids.email}-error`} message={e.email} />
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={pending}>
+          {pending && <LoaderCircle aria-hidden="true" className="h-4 w-4 animate-spin" />}
+          Save changes
+        </Button>
+        <Button type="button" variant="secondary" onClick={onDone} disabled={pending}>
+          {state.ok ? "Close" : "Cancel"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** One row on the Team page: details, actions, and an inline edit form. */
+export function TeamMemberRow({
+  id,
+  name,
+  email,
+  role,
+  active,
+  isMe,
+  meta,
+}: {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  active: boolean;
+  isMe: boolean;
+  meta: ReactNode;
+}) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <li className={cn("p-5", !active && "bg-sand-100/60")}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-medium text-ink-900">
+            {name} {isMe && <span className="text-sm font-normal text-ink-600">(you)</span>}
+          </p>
+          <p className="text-sm break-all text-ink-600">{email}</p>
+          <p className="mt-1 text-xs text-ink-600">{meta}</p>
+        </div>
+        {isMe ? (
+          <Link
+            href="/admin/account"
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-sand-300 bg-white px-3 text-xs font-medium text-ink-800 hover:border-ink-500/50"
+          >
+            <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
+            Edit in My account
+          </Link>
+        ) : (
+          <UserRowActions
+            userId={id}
+            name={name}
+            role={role}
+            active={active}
+            leading={
+              <button
+                type="button"
+                aria-expanded={editing}
+                onClick={() => setEditing((v) => !v)}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-sand-300 bg-white px-3 text-xs font-medium text-ink-800 hover:border-ink-500/50"
+              >
+                <Pencil aria-hidden="true" className="h-3.5 w-3.5" />
+                {editing ? "Close editor" : "Edit details"}
+              </button>
+            }
+          />
+        )}
+      </div>
+      {editing && !isMe && (
+        <EditUserForm userId={id} name={name} email={email} onDone={() => setEditing(false)} />
+      )}
+    </li>
   );
 }

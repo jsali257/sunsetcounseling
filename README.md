@@ -99,7 +99,8 @@ Running `create-admin` again with an existing email resets that account to an ac
 | View inquiries, search, filter | ✓ | ✓ |
 | Update status, add notes | ✓ | ✓ |
 | Stats dashboard | | ✓ |
-| Add, deactivate, reset team members | | ✓ |
+| Edit your own name, email, and password | ✓ | ✓ |
+| Add, edit, deactivate, reset team members | | ✓ |
 | Manage who receives inquiry alerts | | ✓ |
 | Audit log, CSV export, delete inquiries | | ✓ |
 

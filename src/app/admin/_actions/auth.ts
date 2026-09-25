@@ -20,6 +20,8 @@ import { requireUser } from "@/lib/auth/dal";
 import { LOGIN_PATH } from "@/lib/auth/constants";
 import { audit } from "@/lib/audit";
 import type { ActionState } from "@/lib/admin/form-state";
+import { EMAIL_RE, normalizeEmail, normalizeName } from "@/lib/admin/validation";
+import { MongoServerError } from "mongodb";
 
 const WINDOW_MINUTES = 15;
 const MAX_PER_EMAIL = 5;
@@ -138,4 +140,53 @@ export async function changePassword(
   revalidatePath("/admin", "layout");
   if (user.mustChangePassword) redirect("/admin");
   return { ok: true, message: "Password updated. Other devices have been signed out." };
+}
+
+export async function updateOwnProfile(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser();
+  const name = normalizeName(formData.get("name"));
+  const email = normalizeEmail(formData.get("email"));
+  const password = String(formData.get("password") ?? "");
+
+  const fieldErrors: Record<string, string> = {};
+  if (!name) fieldErrors.name = "Enter your name.";
+  if (!EMAIL_RE.test(email)) fieldErrors.email = "Enter a valid email.";
+  if (Object.keys(fieldErrors).length) return { fieldErrors };
+
+  const emailChanged = email !== user.email;
+  if (!emailChanged && name === user.name) return { ok: true, message: "No changes to save." };
+
+  const { users } = await collections();
+  if (emailChanged) {
+    // Your email is how you sign in, so confirm it's really you.
+    const record = await users.findOne({ _id: user._id }, { projection: { passwordHash: 1 } });
+    if (!password) return { fieldErrors: { password: "Enter your password to change your email." } };
+    if (!record || !(await verifyPassword(password, record.passwordHash))) {
+      return { fieldErrors: { password: "Password is incorrect." } };
+    }
+  }
+
+  try {
+    await users.updateOne({ _id: user._id }, { $set: { name, email, updatedAt: new Date() } });
+  } catch (error) {
+    if (error instanceof MongoServerError && error.code === 11000) {
+      return { fieldErrors: { email: "Another team member already uses this email." } };
+    }
+    throw error;
+  }
+
+  const changes = [
+    name !== user.name && `name to “${name}”`,
+    emailChanged && `email from ${user.email} to ${email}`,
+  ].filter(Boolean);
+  await audit({ ...user, name }, `Changed their ${changes.join(" and ")}`, { targetType: "user", targetId: email });
+  // The sidebar shows your name and email.
+  revalidatePath("/admin", "layout");
+  return {
+    ok: true,
+    message: emailChanged ? `Saved. Sign in with ${email} from now on.` : "Saved.",
+  };
 }

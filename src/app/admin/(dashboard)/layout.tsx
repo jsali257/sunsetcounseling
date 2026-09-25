@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { LogOut, ExternalLink } from "lucide-react";
 import { requireUser } from "@/lib/auth/dal";
-import { countByStatus } from "@/lib/inquiries/repository";
+import { countByStatus, getInquirySignature } from "@/lib/inquiries/repository";
 import { logout } from "@/app/admin/_actions/auth";
 import { roleLabels } from "@/lib/db/types";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { LiveUpdates } from "@/components/admin/LiveUpdates";
 import Image from "next/image";
 import { brand } from "@/content/brand";
 
 export default async function DashboardLayout({ children }: LayoutProps<"/admin">) {
   // Pages repeat this check; the layout only needs the user for the shell.
   const user = await requireUser({ allowPasswordChange: true });
-  const counts = await countByStatus();
+  const [counts, signature] = await Promise.all([countByStatus(), getInquirySignature()]);
 
   return (
     <div className="flex flex-1 flex-col lg:flex-row">
@@ -37,7 +38,16 @@ export default async function DashboardLayout({ children }: LayoutProps<"/admin"
 
         <div className="px-3 py-3 lg:mt-6 lg:flex-1 lg:px-3">
           {!user.mustChangePassword && (
-            <AdminNav isAdmin={user.role === "admin"} newCount={counts.new} />
+            <>
+              <AdminNav isAdmin={user.role === "admin"} newCount={counts.new} />
+              <p className="mt-3 hidden items-center gap-2 px-3 text-xs text-ink-600 lg:flex">
+                <span aria-hidden="true" className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sage-500 opacity-40 [animation-duration:2.4s]" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-sage-600" />
+                </span>
+                Live · updates automatically
+              </p>
+            </>
           )}
         </div>
 
@@ -71,6 +81,7 @@ export default async function DashboardLayout({ children }: LayoutProps<"/admin"
       <main id="main" className="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:px-10 lg:py-10">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
+      {!user.mustChangePassword && <LiveUpdates initial={signature} />}
     </div>
   );
 }

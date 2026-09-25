@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { getInquiry } from "@/lib/inquiries/repository";
 import { statusLabels } from "@/lib/db/types";
 import { formOptions } from "@/content/site";
-import { labelFor } from "@/lib/inquiry";
+import { formatPhone, labelFor } from "@/lib/inquiry";
 import { formatDateTime, formatRelative } from "@/lib/admin/format";
 import { Card, StatusBadge } from "@/components/admin/ui";
 import { DeleteInquiryButton, NoteForm, StatusForm } from "@/components/admin/InquiryActions";
@@ -56,7 +56,7 @@ export default async function InquiryPage({ params }: PageProps<"/admin/inquirie
               {phoneHref && (
                 <>
                   <a href={phoneHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-terracotta-700 px-4 text-sm font-medium text-cream-50 hover:bg-terracotta-800">
-                    <Phone aria-hidden="true" className="h-4 w-4" /> {inquiry.phone}
+                    <Phone aria-hidden="true" className="h-4 w-4" /> {formatPhone(inquiry.phone)}
                   </a>
                   <a href={smsHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-sand-300 bg-white px-4 text-sm text-ink-800 hover:border-ink-500/50">
                     <MessageSquareText aria-hidden="true" className="h-4 w-4" /> Text
