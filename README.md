@@ -16,13 +16,7 @@ npm run lint
 
 Nearly all copy lives in **`src/content/site.ts`**: contact details, navigation, services, FAQ, bilingual copy, evaluation and referral text, insurance text, and form options. Change it there. Components only handle presentation.
 
-To add Diana's portrait, put the image in `public/images/` and set `counselor.portrait` in `site.ts`:
-
-```ts
-portrait: { src: "/images/diana-arredondo.jpg", alt: "Diana Arredondo, M.S., LPC" },
-```
-
-It renders through `next/image`. Until then, the site shows a neutral monogram placeholder.
+Photos live in `public/images/` and are imported in `site.ts`: `hero.image` (the office) and `counselor.portrait` (Diana). To swap a photo, replace the file or change the import. Each photo has an `alt` description and a `position` that controls how it is cropped in its frame. `next/image` resizes the photos, serves modern formats, and shows a blurred preview while they load.
 
 ## Project structure
 
@@ -60,7 +54,6 @@ With neither configured, inquiries are logged to the console in development. In 
 - [ ] Set `NEXT_PUBLIC_SITE_URL` to the real domain. The default, `www.sunsetcounselingcenter.com`, is a placeholder.
 - [ ] Configure form delivery (see above) and send a test inquiry.
 - [ ] Have the practice's compliance or legal advisor review `/privacy`, `/notice-of-privacy-practices`, and `/informed-consent`. These pages are general overviews that point to the official documents given at intake.
-- [ ] Add Diana's professional portrait.
 - [ ] Optionally add confirmed office hours, accepted insurance plans, or map coordinates to `src/content/site.ts` and to the structured data in `src/lib/structured-data.tsx`. These were left out on purpose because they haven't been verified.
 - [ ] If analytics are added, update the Privacy Policy's "Cookies and analytics" section.
 
@@ -72,4 +65,4 @@ With neither configured, inquiries are logged to the console in development. In 
 - Form fields have labels, `aria-invalid`/`aria-describedby` error wiring, and focus moves to the result
 - Text colors meet WCAG AA contrast on their backgrounds
 - Scroll reveals are subtle, respect `prefers-reduced-motion`, and content stays visible without JavaScript and when printing
-- Hero and decorative art are inline SVG (no image requests). Fonts are self-hosted through `next/font`.
+- Photos are optimized with `next/image`, and the hero photo is preloaded. Decorative art is inline SVG. Fonts are self-hosted through `next/font`.

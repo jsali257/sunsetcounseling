@@ -5,6 +5,17 @@
  * without touching presentation components.
  */
 
+import type { StaticImageData } from "next/image";
+import officePhoto from "../../public/images/sunset_office.jpg";
+import dianaPhoto from "../../public/images/diana.jpg";
+
+export type Photo = {
+  src: StaticImageData;
+  alt: string;
+  /** CSS object-position used when the photo is cropped to fit its frame. */
+  position?: string;
+};
+
 export const site = {
   name: "Sunset Counseling Center, PLLC",
   shortName: "Sunset Counseling Center",
@@ -70,6 +81,11 @@ export const ctaLinks = {
 } as const;
 
 export const hero = {
+  image: {
+    src: officePhoto,
+    alt: "A calm counseling room at Sunset Counseling Center with a cream sofa, sage green pillows, a swivel armchair, an olive tree, and soft lamp light",
+    position: "62% center",
+  } satisfies Photo,
   /** Rendered as one heading; the accent portion is set in italic. */
   headline: "Compassionate Care for a",
   headlineAccent: "Brighter Tomorrow",
@@ -94,11 +110,12 @@ export const counselor = {
   name: "Diana Arredondo",
   credentials: "M.S., LPC",
   title: "Licensed Professional Counselor",
-  /**
-   * Add a real portrait by placing an image in /public (e.g. /images/diana-arredondo.jpg)
-   * and setting the path here. Leave as null to show the placeholder.
-   */
-  portrait: null as { src: string; alt: string } | null,
+  /** Set to null to show the monogram placeholder instead. */
+  portrait: {
+    src: dianaPhoto,
+    alt: "Diana Arredondo, M.S., LPC, seated in the Sunset Counseling Center office",
+    position: "42% center",
+  } as Photo | null,
   bio: [
     "Diana Arredondo is a Licensed Professional Counselor providing counseling services to individuals seeking support through challenging life experiences.",
     "Her counseling style emphasizes compassion, emotional safety, collaboration, and respect. She believes that clients are more than the challenges they are experiencing and works to help individuals recognize their strengths while developing practical tools for managing difficult thoughts, emotions, and circumstances.",

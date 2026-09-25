@@ -1,8 +1,8 @@
+import Image from "next/image";
 import { Phone, MapPin, Languages } from "lucide-react";
 import { hero, site, ctaLinks } from "@/content/site";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { SunsetLandscape } from "@/components/ui/Decorations";
 
 export function Hero({ appointmentHref = ctaLinks.appointment }: { appointmentHref?: string }) {
   return (
@@ -75,7 +75,18 @@ export function Hero({ appointmentHref = ctaLinks.appointment }: { appointmentHr
 
         <div className="relative">
           <div className="relative aspect-[5/4] overflow-hidden rounded-[2rem] shadow-[0_30px_80px_-40px_rgb(111_55_37/0.45)] sm:aspect-[16/11] lg:aspect-[4/5] lg:rounded-[2.5rem]">
-            <SunsetLandscape className="absolute inset-0 h-full w-full" />
+            <Image
+              src={hero.image.src}
+              alt={hero.image.alt}
+              fill
+              preload
+              placeholder="blur"
+              sizes="(min-width: 1024px) 560px, (min-width: 640px) 90vw, 100vw"
+              className="object-cover"
+              style={{ objectPosition: hero.image.position }}
+            />
+            {/* a faint warm wash ties the photo to the palette */}
+            <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,rgb(139_69_47/0.12))]" />
           </div>
 
           <div className="absolute -bottom-6 left-4 rounded-2xl border border-cream-50/60 bg-cream-50/90 p-4 shadow-[var(--shadow-lift)] backdrop-blur-sm sm:left-8 lg:-left-8 lg:bottom-10">

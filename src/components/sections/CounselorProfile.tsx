@@ -14,8 +14,10 @@ function Portrait() {
         src={counselor.portrait.src}
         alt={counselor.portrait.alt}
         fill
-        sizes="(min-width: 1024px) 420px, (min-width: 640px) 60vw, 90vw"
+        placeholder="blur"
+        sizes="(min-width: 1024px) 420px, 384px"
         className="object-cover"
+        style={{ objectPosition: counselor.portrait.position }}
       />
     );
   }
